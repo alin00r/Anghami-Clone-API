@@ -27,7 +27,7 @@ import { GoogleOauthModule } from './oauth/google/google-oauth.module';
           port: config.get<number>('NEON_DB_PORT'),
           username: config.get<string>('NEON_DB_USERNAME'),
           password: config.get<string>('NEON_DB_BASSWORD'),
-          database: 'Anghami_Clone_API',
+          database: 'neondb',
           ssl: {
             rejectUnauthorized: false,
           },

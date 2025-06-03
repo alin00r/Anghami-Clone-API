@@ -25,9 +25,9 @@ export class Song extends AbstractedEntity {
   @Column({ type: 'varchar' })
   imageUrl: String;
 
-  // @ManyToOne(() => User, (user) => user.songs, {
-  //   eager: true,
-  //   onDelete: 'CASCADE',
-  // })
-  // user: User;
+  @ManyToOne(() => User, (user) => user.songs, {
+    eager: true,
+    onDelete: 'CASCADE',
+  })
+  user: User;
 }

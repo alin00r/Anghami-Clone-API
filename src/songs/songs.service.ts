@@ -7,8 +7,9 @@ import {
 import { Like, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateSongDTO } from './dtos/create-song.dto';
-import { convertDurationToMinutes } from 'src/utils/turnDuration';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
+import { UsersService } from 'src/users/users.service';
+import { UpdateSongDTO } from './dtos/update-song.dto';
 
 @Injectable()
 export class SongsService {
@@ -16,26 +17,31 @@ export class SongsService {
     @InjectRepository(Song)
     private readonly songsRepository: Repository<Song>,
     private cloudinary: CloudinaryService,
+    private usersService: UsersService,
   ) {}
 
   public async uploadImageToCloudinary(file: Express.Multer.File) {
     const result = await this.cloudinary.uploadImage(file).catch((err) => {
-      throw new BadRequestException('Invalid image file type.');
+      console.log(err);
+      throw new BadRequestException('Cloudinary image upload error.');
     });
     return result.secure_url;
   }
 
   public async uploadAudioToCloudinary(file: Express.Multer.File) {
     const result = await this.cloudinary.uploadAudio(file).catch((err) => {
-      throw new BadRequestException('Invalid audio file type.');
+      throw new BadRequestException('Cloudinary audio upload error.');
     });
     return result;
   }
 
-  public async createSong(dto: CreateSongDTO) {
+  public async createSong(dto: CreateSongDTO, userId: number) {
+    const user = await this.usersService.getCurrentUser(userId);
+    console.log(user.songs);
     const newSong = this.songsRepository.create({
       ...dto,
       name: dto.name.toLowerCase(),
+      user,
     });
 
     return this.songsRepository.save(newSong);
@@ -64,6 +70,45 @@ export class SongsService {
     const song = await this.getOneBy(id);
     if (!song) throw new NotFoundException('song not found');
     await this.songsRepository.remove(song);
-    return { message: 'Product deleted successfully' };
+    return { message: 'Song deleted successfully' };
+  }
+
+  public async update(id: number, dto: UpdateSongDTO) {
+    const song = await this.getOneBy(id);
+    song.name = dto.name ?? song.name; // -> coalescing operator
+    song.artist = dto.artist ?? song.artist;
+    song.releasedDate = dto.releasedDate ?? song.releasedDate;
+    song.releasedDate = dto.releasedDate ?? song.releasedDate;
+    return this.songsRepository.save(song);
+  }
+
+  public async updateSongImage(songId: number, newSongImage: string) {
+    const song = await this.getOneBy(songId);
+    if (song.imageUrl === null) {
+      song.imageUrl = newSongImage;
+    } else {
+      const cloudinaryBublicId = this.cloudinary.getPublicIdFromUrl(
+        song.imageUrl.toString(),
+      );
+      await this.cloudinary.deleteImagefromCloudinary(await cloudinaryBublicId);
+      song.imageUrl = newSongImage;
+    }
+
+    return this.songsRepository.save(song);
+  }
+
+  public async updateSongAudio(songId: number, newSongAudio: string) {
+    const song = await this.getOneBy(songId);
+    if (song.imageUrl === null) {
+      song.audioUrl = newSongAudio;
+    } else {
+      const cloudinaryBublicId = this.cloudinary.getPublicIdFromUrl(
+        song.imageUrl.toString(),
+      );
+      await this.cloudinary.deleteImagefromCloudinary(await cloudinaryBublicId);
+      song.audioUrl = newSongAudio;
+    }
+
+    return this.songsRepository.save(song);
   }
 }

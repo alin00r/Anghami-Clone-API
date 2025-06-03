@@ -74,23 +74,24 @@ export class CloudinaryService {
       const upload = v2.uploader.upload_stream(
         {
           folder: 'songs',
-          resource_type: 'video', // important for audio files
+          resource_type: 'video',
+          use_filename: true,
+          unique_filename: false,
         },
         (error, result) => {
           if (error) {
-            console.log(error);
             console.error('Cloudinary audio upload error:', error);
             return reject(error);
           }
-          const url = result?.secure_url || '';
-          const duration = result?.duration || 0;
+
+          const url = result?.secure_url ?? '';
+          const duration = result?.duration ?? 0;
 
           resolve({ url, duration });
         },
       );
 
-      const stream = Readable.from(file.buffer);
-      stream.pipe(upload);
+      Readable.from(file.buffer).pipe(upload);
     });
   }
 

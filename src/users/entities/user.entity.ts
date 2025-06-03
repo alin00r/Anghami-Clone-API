@@ -1,4 +1,4 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm';
 import { Song } from '../../songs/songs.entity';
 import { UserType } from '../../utils/enums';
 import { Exclude } from 'class-transformer';
@@ -34,8 +34,8 @@ export class User extends AbstractedEntity {
   @Column({ type: 'varchar', nullable: true, default: 'jwt' })
   kind: string | null;
 
-  // @OneToMany(() => Song, (song) => song.user)
-  // songs: Song[];
+  @OneToMany(() => Song, (song) => song.user)
+  songs: Song[];
 
   // @OneToMany(() => Review, (review) => review.user)
   // reviews: Review[];
